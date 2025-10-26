@@ -98,7 +98,7 @@ export default function DashboardPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Loading dashboard...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </DashboardLayout>
     );
@@ -130,20 +130,20 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-500 mt-1">Real-time election monitoring - Anambra 2025</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard Overview</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Real-time election monitoring - Anambra 2025</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">PU Agents Profiled</CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">PU Agents Profiled</CardTitle>
+              <Users className="h-4 w-4 text-blue-500 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.profiledAgents || 0}</div>
-              <p className="text-xs text-gray-500 mt-1">
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.profiledAgents || 0}</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 of {stats?.expectedTotalPUs || 0} total PUs ({stats?.profilingPercentage || 0}%)
               </p>
             </CardContent>
@@ -151,14 +151,14 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Results Submitted</CardTitle>
-              <FileCheck className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Results Submitted</CardTitle>
+              <FileCheck className="h-4 w-4 text-green-500 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {stats?.submittedCount || 0}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 vs {stats?.expectedTotalPUs || 0} expected ({stats?.submissionPercentage || 0}%)
               </p>
             </CardContent>
@@ -166,14 +166,14 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Votes Cast</CardTitle>
-              <FileCheck className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Votes Cast</CardTitle>
+              <FileCheck className="h-4 w-4 text-blue-500 dark:text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {stats?.totalVotes?.toLocaleString() || 0}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Across all submitted results
               </p>
             </CardContent>
@@ -181,14 +181,14 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Incidents</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Incidents</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-500 dark:text-red-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {stats?.totalIncidents || 0}
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {stats?.investigatingIncidents || 0} investigating, {stats?.resolvedIncidents || 0} resolved
               </p>
             </CardContent>
@@ -200,16 +200,16 @@ export default function DashboardPage() {
           {/* Bar Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Party Votes Breakdown</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-gray-100">Party Votes Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="party" />
-                    <YAxis />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                    <XAxis dataKey="party" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', color: '#E5E7EB' }} />
                     <Legend />
                     <Bar dataKey="votes" fill="#8884d8">
                       {chartData.map((entry, index) => (
@@ -219,7 +219,7 @@ export default function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-300 flex items-center justify-center text-gray-500">
+                <div className="h-300 flex items-center justify-center text-gray-500 dark:text-gray-400">
                   No results submitted yet
                 </div>
               )}
@@ -229,7 +229,7 @@ export default function DashboardPage() {
           {/* Pie Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Vote Distribution</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-gray-100">Vote Distribution</CardTitle>
             </CardHeader>
             <CardContent>
               {pieData.length > 0 ? (
@@ -249,11 +249,11 @@ export default function DashboardPage() {
                         <Cell key={`cell-${index}`} fill={PARTY_COLORS[entry.name] || '#999999'} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', color: '#E5E7EB' }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-300 flex items-center justify-center text-gray-500">
+                <div className="h-300 flex items-center justify-center text-gray-500 dark:text-gray-400">
                   No results submitted yet
                 </div>
               )}
@@ -264,18 +264,18 @@ export default function DashboardPage() {
         {/* Live Results Feed */}
         <Card>
           <CardHeader>
-            <CardTitle>Latest Results</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">Real-time feed of submitted results</p>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Latest Results</CardTitle>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time feed of submitted results</p>
           </CardHeader>
           <CardContent>
             {latestResults.length > 0 ? (
               <div className="space-y-3">
                 {latestResults.map((result) => (
-                  <div key={result.id} className="border-l-4 border-green-500 bg-gray-50 p-4 rounded-r-md">
+                  <div key={result.id} className="border-l-4 border-green-500 dark:border-green-400 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-r-md">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="font-semibold text-gray-900">{result.pollingUnit}</p>
-                        <p className="text-xs text-gray-500">{result.ward}, {result.lga}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{result.pollingUnit}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{result.ward}, {result.lga}</p>
                       </div>
                       <Badge variant="outline" className="text-xs">
                         {new Date(result.submittedAt).toLocaleTimeString()}
@@ -296,19 +296,19 @@ export default function DashboardPage() {
                           <span className="font-medium" style={{ color: PARTY_COLORS[party] || '#999999' }}>
                             {party}:
                           </span>
-                          <span className="font-bold">{votes}</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{votes}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Total: {result.totalVotes} votes</span>
-                      <span className="text-xs text-gray-500">By: {result.agentName}</span>
+                    <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Total: {result.totalVotes} votes</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">By: {result.agentName}</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 No results submitted yet
               </div>
             )}
@@ -319,16 +319,16 @@ export default function DashboardPage() {
         {stats?.totalVotes > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Total Votes: {stats.totalVotes.toLocaleString()}</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-gray-100">Total Votes: {stats.totalVotes.toLocaleString()}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Object.entries(groupedVotes).map(([party, votes]: [string, any]) => (
-                  <div key={party} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div key={party} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md">
                     <span className="font-semibold" style={{ color: PARTY_COLORS[party] }}>
                       {party}
                     </span>
-                    <span className="text-xl font-bold">{votes.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-gray-900 dark:text-gray-100">{votes.toLocaleString()}</span>
                   </div>
                 ))}
               </div>

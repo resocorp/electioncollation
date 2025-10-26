@@ -3,6 +3,9 @@
 ## ✅ Build Status
 **SUCCESS** - All TypeScript compilation and builds passed with no errors!
 
+## 🎨 Latest Improvements
+**ENHANCED** - Dark mode now features soft, eye-friendly colors with no harsh whites!
+
 ## 🚀 Quick Start Testing
 
 ### 1. Start the Development Server
@@ -59,9 +62,14 @@ npm run dev
 - [ ] Theme toggle icon is visible and clickable
 - [ ] Colors transition smoothly (no jarring changes)
 - [ ] All text is readable in both modes
+- [ ] **No white-on-white text anywhere** ⭐
+- [ ] **No harsh bright whites in dark mode** ⭐
 - [ ] No white flashes when switching themes
 - [ ] Hover states work correctly in both modes
 - [ ] Borders and separators are visible but subtle
+- [ ] Charts are clearly visible in dark mode
+- [ ] Card backgrounds are soft, not harsh
+- [ ] Numbers and stats are easy to read
 
 ### ✅ Functional Checks
 - [ ] Toggle switches between light and dark

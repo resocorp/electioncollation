@@ -205,6 +205,25 @@ Potential improvements for future iterations:
 ### Issue: Styles not applying
 **Solution**: Verify Tailwind config has `darkMode: ["class"]`
 
+## Recent Improvements (Latest Update)
+
+### **Enhanced Dark Mode - Soft & Readable**
+The dark mode has been significantly improved to address visibility and comfort issues:
+
+- ✅ **No More White-on-White**: All text elements now have explicit dark mode colors
+- ✅ **Soft Backgrounds**: Replaced harsh whites with comfortable blue-gray tones
+- ✅ **Improved Charts**: Bar and pie charts optimized for dark mode visibility
+- ✅ **Better Contrast**: All text meets WCAG AA standards without being harsh
+- ✅ **Consistent Colors**: Unified color temperature across all components
+
+### **Color Philosophy**
+- No pure white (#FFFFFF) or pure black (#000000)
+- Soft blue-gray tones (220° hue) for visual harmony
+- Lightness values: 12% (background), 16% (cards), 20% (accents)
+- Text: 88% lightness for primary, 60% for secondary
+
+See `DARK_MODE_IMPROVEMENTS.md` for detailed changes.
+
 ## Summary
 
-Dark mode is now fully functional across the Election Collation System. Users can toggle between light and dark modes, and the theme preference persists across sessions. All UI components have been updated to support dark mode with proper contrast and accessibility standards.
+Dark mode is now fully functional across the Election Collation System with a professional, eye-friendly design. Users can toggle between light and dark modes, and the theme preference persists across sessions. All UI components have been updated to support dark mode with proper contrast, accessibility standards, and comfortable viewing experience.
