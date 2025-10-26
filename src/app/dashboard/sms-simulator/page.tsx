@@ -73,7 +73,9 @@ export default function SMSSimulatorPage() {
   };
 
   const quickMessages = {
-    result: 'R APGA:450 APC:320 PDP:280 LP:150',
+    result: 'R ADC:450 APC:320 APGA:500 LP:280 PDP:380 YPP:150',
+    partialResult: 'R APC:320 PDP:380',
+    allParties: 'R ADC:100 APC:200 APGA:300 LP:150 PDP:250 YPP:80 AA:20 ADP:15 AP:10 APM:5 BP:3 NNPP:25 NRM:8 PRP:12 SDP:18 ZLP:7',
     incident: 'I Vote buying observed at polling unit entrance',
     status: 'STATUS',
     help: 'HELP',
@@ -110,7 +112,7 @@ export default function SMSSimulatorPage() {
               <div>
                 <Label>Message</Label>
                 <Input
-                  placeholder="R APGA:450 APC:320 PDP:280 LP:150"
+                  placeholder="R ADC:450 APC:320 APGA:500 LP:280 PDP:380 YPP:150"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
@@ -147,11 +149,14 @@ export default function SMSSimulatorPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Submit Results</h3>
+                <h3 className="font-semibold text-sm">Submit Results (Full or Partial)</h3>
                 <div className="bg-gray-50 p-3 rounded-md font-mono text-sm">
-                  R APGA:450 APC:320 PDP:280 LP:150
+                  R ADC:450 APC:320 APGA:500 LP:280 PDP:380 YPP:150
                 </div>
-                <p className="text-xs text-gray-600">Format: R PARTY:VOTES PARTY:VOTES ...</p>
+                <div className="bg-gray-50 p-3 rounded-md font-mono text-sm mt-2">
+                  R APC:320 PDP:380
+                </div>
+                <p className="text-xs text-gray-600">Format: R PARTY:VOTES PARTY:VOTES ... (1+ parties)</p>
               </div>
 
               <div className="space-y-2">
@@ -187,13 +192,28 @@ export default function SMSSimulatorPage() {
               </div>
 
               <div className="pt-4 border-t">
-                <h3 className="font-semibold text-sm mb-2">Valid Parties:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {['APGA', 'APC', 'PDP', 'LP', 'NNPP', 'ADC', 'YPP', 'SDP'].map(party => (
-                    <span key={party} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                      {party}
-                    </span>
-                  ))}
+                <h3 className="font-semibold text-sm mb-2">Valid Parties (16 Total):</h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-1">Main Parties (Top 6):</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['ADC', 'APC', 'APGA', 'LP', 'PDP', 'YPP'].map(party => (
+                        <span key={party} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-semibold">
+                          {party}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-1">Other Parties:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['AA', 'ADP', 'AP', 'APM', 'BP', 'NNPP', 'NRM', 'PRP', 'SDP', 'ZLP'].map(party => (
+                        <span key={party} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                          {party}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

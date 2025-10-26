@@ -27,8 +27,14 @@ export interface ParsedHelpSMS {
 
 export type ParsedSMS = ParsedResultSMS | ParsedIncidentSMS | ParsedStatusSMS | ParsedHelpSMS;
 
-// Valid party acronyms for Anambra Election
-const VALID_PARTIES = ['APC', 'PDP', 'APGA', 'LP', 'NNPP', 'ADC', 'YPP', 'SDP'];
+// Valid party acronyms for Anambra Election (All 16 registered parties)
+const VALID_PARTIES = [
+  'AP', 'AA', 'ADP', 'ADC', 'APC', 'APGA', 'APM', 'BP',
+  'LP', 'NRM', 'NNPP', 'PDP', 'PRP', 'SDP', 'YPP', 'ZLP'
+];
+
+// Top 6 main parties for dashboard display
+const MAIN_PARTIES = ['ADC', 'APC', 'APGA', 'LP', 'PDP', 'YPP'];
 
 // Incident keywords mapping
 const INCIDENT_KEYWORDS = {
@@ -129,9 +135,9 @@ function parseResultSMS(content: string): ParsedResultSMS {
   
   const totalVotes = Object.values(partyVotes).reduce((sum, votes) => sum + votes, 0);
   
-  // Must have at least 2 parties
-  if (Object.keys(partyVotes).length < 2 && errors.length === 0) {
-    errors.push('Please provide results for at least 2 parties');
+  // Must have at least 1 party (accept partial results)
+  if (Object.keys(partyVotes).length < 1 && errors.length === 0) {
+    errors.push('Please provide results for at least 1 party');
   }
   
   return {

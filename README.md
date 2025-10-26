@@ -159,12 +159,29 @@ election-collation/
 20. Orumba South
 21. Oyi
 
-**Political Parties:**
-- APGA (All Progressives Grand Alliance) - Strong in Anambra
+**Political Parties (16 Registered):**
+
+*Main Parties (Top 6):*
+- ADC (African Democratic Congress)
 - APC (All Progressives Congress)
-- PDP (Peoples Democratic Party)
+- APGA (All Progressives Grand Alliance) - Strong in Anambra
 - LP (Labour Party)
-- NNPP, ADC, YPP, SDP
+- PDP (Peoples Democratic Party)
+- YPP (Young Progressives Party)
+
+*Other Parties:*
+- AA (Action Alliance)
+- ADP (Action Democratic Party)
+- AP (Accord Party)
+- APM (Allied Peoples Movement)
+- BP (Boot Party)
+- NNPP (New Nigeria Peoples Party)
+- NRM (National Rescue Movement)
+- PRP (People's Redemption Party)
+- SDP (Social Democratic Party)
+- ZLP (Zenith Labour Party)
+
+**Note:** Dashboard displays top 6 parties individually and groups others as "OTHERS". All parties accepted via SMS (full or partial results).
 
 ## GoIP Configuration
 

@@ -7,16 +7,54 @@ import { Badge } from '@/components/ui/badge';
 import { Users, FileCheck, Clock, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
+// Top 6 main parties for dashboard display
+const MAIN_PARTIES = ['ADC', 'APC', 'APGA', 'LP', 'PDP', 'YPP'];
+
+// All party colors (16 registered parties)
 const PARTY_COLORS: Record<string, string> = {
-  APGA: '#006600',
-  APC: '#0066CC',
-  PDP: '#FF0000',
-  LP: '#DC143C',
-  NNPP: '#FF6600',
+  // Main Parties (Top 6)
   ADC: '#228B22',
+  APC: '#0066CC',
+  APGA: '#006600',
+  LP: '#DC143C',
+  PDP: '#FF0000',
   YPP: '#4169E1',
+  // Other Parties
+  AA: '#800080',
+  ADP: '#FFA500',
+  AP: '#008080',
+  APM: '#FF1493',
+  BP: '#8B4513',
+  NNPP: '#FF6600',
+  NRM: '#00CED1',
+  PRP: '#9370DB',
   SDP: '#FFD700',
+  ZLP: '#20B2AA',
+  // Others category
+  OTHERS: '#999999',
 };
+
+/**
+ * Group party votes into top 6 + Others
+ */
+function groupPartyVotes(partyVotes: Record<string, number>): Record<string, number> {
+  const grouped: Record<string, number> = {};
+  let othersTotal = 0;
+
+  for (const [party, votes] of Object.entries(partyVotes)) {
+    if (MAIN_PARTIES.includes(party)) {
+      grouped[party] = votes;
+    } else {
+      othersTotal += votes;
+    }
+  }
+
+  if (othersTotal > 0) {
+    grouped['OTHERS'] = othersTotal;
+  }
+
+  return grouped;
+}
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
@@ -66,11 +104,14 @@ export default function DashboardPage() {
     );
   }
 
-  const chartData = stats?.partyVotes ? Object.entries(stats.partyVotes).map(([party, votes]) => ({
+  // Group party votes for display (top 6 + Others)
+  const groupedVotes = stats?.partyVotes ? groupPartyVotes(stats.partyVotes) : {};
+  
+  const chartData = Object.entries(groupedVotes).map(([party, votes]) => ({
     party,
     votes,
     fill: PARTY_COLORS[party] || '#999999'
-  })) : [];
+  }));
 
   const pieData = chartData.map(item => ({
     name: item.party,
@@ -234,9 +275,18 @@ export default function DashboardPage() {
                       </Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                      {Object.entries(result.partyVotes as Record<string, number>).map(([party, votes]) => (
+                      {Object.entries(result.partyVotes as Record<string, number>)
+                        .sort(([a], [b]) => {
+                          // Sort: main parties first, then others
+                          const aIsMain = MAIN_PARTIES.includes(a);
+                          const bIsMain = MAIN_PARTIES.includes(b);
+                          if (aIsMain && !bIsMain) return -1;
+                          if (!aIsMain && bIsMain) return 1;
+                          return a.localeCompare(b);
+                        })
+                        .map(([party, votes]) => (
                         <div key={party} className="flex items-center justify-between text-sm">
-                          <span className="font-medium" style={{ color: PARTY_COLORS[party] }}>
+                          <span className="font-medium" style={{ color: PARTY_COLORS[party] || '#999999' }}>
                             {party}:
                           </span>
                           <span className="font-bold">{votes}</span>
@@ -266,7 +316,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(stats.partyVotes || {}).map(([party, votes]: [string, any]) => (
+                {Object.entries(groupedVotes).map(([party, votes]: [string, any]) => (
                   <div key={party} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                     <span className="font-semibold" style={{ color: PARTY_COLORS[party] }}>
                       {party}
