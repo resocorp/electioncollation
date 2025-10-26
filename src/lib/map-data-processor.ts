@@ -104,11 +104,18 @@ export function transformToGeoJSON(
   results: ElectionResult[],
   parties: Party[]
 ): MapGeoJSON {
+  console.log(`🔄 Processing ${pollingUnits.length} polling units, ${results.length} results, ${parties.length} parties`);
+  
   // Create a map of results by polling unit code for fast lookup
   const resultsMap = new Map<string, ElectionResult>();
   results.forEach(result => {
     resultsMap.set(result.polling_unit_code, result);
   });
+
+  console.log(`📊 Results map has ${resultsMap.size} entries`);
+  if (results.length > 0) {
+    console.log('Sample result:', results[0]);
+  }
 
   const features: MapFeature[] = pollingUnits
     .filter(unit => unit.latitude && unit.longitude) // Only units with GPS coordinates
@@ -165,6 +172,12 @@ export function transformToGeoJSON(
         properties,
       };
     });
+
+  const featuresWithResults = features.filter(f => f.properties.result_received);
+  console.log(`✅ Created ${features.length} features, ${featuresWithResults.length} with results`);
+  if (featuresWithResults.length > 0) {
+    console.log('Sample feature with result:', featuresWithResults[0].properties);
+  }
 
   return {
     type: 'FeatureCollection',
