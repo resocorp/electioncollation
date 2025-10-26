@@ -115,12 +115,24 @@ export function transformToGeoJSON(
   console.log(`📊 Results map has ${resultsMap.size} entries`);
   if (results.length > 0) {
     console.log('Sample result:', results[0]);
+    console.log('Sample result polling_unit_code:', results[0].polling_unit_code);
+  }
+  if (pollingUnits.length > 0) {
+    console.log('Sample polling unit code:', pollingUnits[0].polling_unit_code);
   }
 
   const features: MapFeature[] = pollingUnits
     .filter(unit => unit.latitude && unit.longitude) // Only units with GPS coordinates
     .map(unit => {
       const result = resultsMap.get(unit.polling_unit_code);
+      
+      // Debug: Log first match attempt
+      if (results.length > 0 && pollingUnits.indexOf(unit) === 0) {
+        console.log('🔍 Trying to match:');
+        console.log('  Unit code:', unit.polling_unit_code, 'Type:', typeof unit.polling_unit_code);
+        console.log('  Result code:', results[0].polling_unit_code, 'Type:', typeof results[0].polling_unit_code);
+        console.log('  Match found:', !!result);
+      }
       
       let properties: MapFeature['properties'];
       
