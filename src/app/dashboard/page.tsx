@@ -107,15 +107,22 @@ export default function DashboardPage() {
   // Group party votes for display (top 6 + Others)
   const groupedVotes = stats?.partyVotes ? groupPartyVotes(stats.partyVotes) : {};
   
-  const chartData = Object.entries(groupedVotes).map(([party, votes]) => ({
+  // Sort to ensure consistent order: main parties first, then OTHERS
+  const sortedEntries = Object.entries(groupedVotes).sort(([a], [b]) => {
+    if (a === 'OTHERS') return 1;
+    if (b === 'OTHERS') return -1;
+    return MAIN_PARTIES.indexOf(a) - MAIN_PARTIES.indexOf(b);
+  });
+  
+  const chartData = sortedEntries.map(([party, votes]) => ({
     party,
     votes,
     fill: PARTY_COLORS[party] || '#999999'
   }));
 
-  const pieData = chartData.map(item => ({
-    name: item.party,
-    value: item.votes
+  const pieData = sortedEntries.map(([party, votes]) => ({
+    name: party,
+    value: votes
   }));
 
   return (
