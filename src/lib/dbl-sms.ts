@@ -71,15 +71,17 @@ export function getDBLConfig() {
 }
 
 /**
- * Send SMS via DBL SMS Server
+ * Send SMS via DBL SMS Server with automatic failover
  * @param phoneNumber Recipient phone number (can be multiple, comma-separated)
  * @param message SMS content
  * @param options Optional provider or line specification
+ * @param retryOnFailure Enable automatic failover to any available line if preferred line fails
  */
 export async function sendSMSViaDbl(
   phoneNumber: string,
   message: string,
-  options?: { provider?: string; goip_line?: string }
+  options?: { provider?: string; goip_line?: string },
+  retryOnFailure: boolean = true
 ): Promise<DBLSendResponse> {
   try {
     const config = getDBLConfig();
@@ -114,6 +116,44 @@ export async function sendSMSViaDbl(
     }
 
     const data: DBLSendResponse = await response.json();
+    
+    // Check if request was rejected due to line failure and retry is enabled
+    if (
+      data.result === 'REJECT' && 
+      data.reason === 'none_line' && 
+      retryOnFailure && 
+      options?.goip_line
+    ) {
+      console.warn(`Line ${options.goip_line} failed, attempting failover to any available line...`);
+      
+      // Retry without specifying a line (use round-robin)
+      const retryRequestBody: DBLSendRequest = {
+        auth: {
+          username: config.username,
+          password: config.password
+        },
+        number: phoneNumber,
+        content: message
+        // No goip_line or provider - let DBL choose
+      };
+      
+      const retryResponse = await fetch(`${config.baseURL}/goip/sendsms/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+        body: JSON.stringify(retryRequestBody)
+      });
+      
+      if (retryResponse.ok) {
+        const retryData: DBLSendResponse = await retryResponse.json();
+        if (retryData.result === 'ACCEPT') {
+          console.log(`Failover successful! Used alternative line. Task ID: ${retryData.taskID}`);
+        }
+        return retryData;
+      }
+    }
+    
     return data;
   } catch (error) {
     console.error('Error sending SMS via DBL:', error);

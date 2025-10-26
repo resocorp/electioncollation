@@ -134,9 +134,9 @@ export async function POST(request: NextRequest) {
     
     if (agentError || !agent) {
       console.log(`[${requestId}] Agent not found:`, agentError?.message || 'No agent');
-      // Unknown agent
+      // Unknown agent - use current line for response
       const errorMsg = 'Phone number not registered. Contact your coordinator.';
-      await sendSMS(phoneNumber, errorMsg, requestId);
+      await sendSMS(phoneNumber, errorMsg, requestId, goipLine);
       await logAudit({
         request_id: requestId,
         event_type: 'unknown_agent',
@@ -149,6 +149,13 @@ export async function POST(request: NextRequest) {
     
     console.log(`[${requestId}] Agent found: ${agent.name} (ID: ${agent.id})`);
     
+    // Update SMS session with line affinity
+    await getOrUpdateSession(phoneNumber, goipLine, 'processing');
+    
+    // Get preferred line for responses (line affinity)
+    const preferredLine = await getPreferredLine(phoneNumber, goipLine);
+    console.log(`[${requestId}] Using line ${preferredLine} for responses (received on ${goipLine})`);
+    
     // Parse SMS
     const parsed = parseSMS(message);
     
@@ -158,7 +165,8 @@ export async function POST(request: NextRequest) {
     if (parsed.type === 'help') {
       console.log(`[${requestId}] Handling HELP command`);
       responseMessage = generateHelpMessage();
-      await sendSMS(phoneNumber, responseMessage, requestId);
+      await getOrUpdateSession(phoneNumber, goipLine, 'help');
+      await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
       await logAudit({
         request_id: requestId,
         event_type: 'help_request',
@@ -183,16 +191,61 @@ export async function POST(request: NextRequest) {
       const status = hasSubmitted ? results[0].validation_status : undefined;
       const refId = hasSubmitted ? results[0].reference_id : undefined;
       
-      responseMessage = generateStatusMessage(hasSubmitted, refId, status);
-      await sendSMS(phoneNumber, responseMessage, requestId);
+      // Check if there's a very recent result submission (within last 10 seconds)
+      // This handles the case where STATUS arrives while RESULT is still processing
+      let processingNote = '';
+      if (!hasSubmitted) {
+        const { data: recentSmsLogs } = await supabase
+          .from('sms_logs')
+          .select('created_at, message')
+          .eq('phone_number', phoneNumber)
+          .eq('direction', 'inbound')
+          .gte('created_at', new Date(Date.now() - 10000).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        const hasRecentResultSms = recentSmsLogs?.some(log => 
+          log.message.toUpperCase().startsWith('R ')
+        );
+        
+        if (hasRecentResultSms) {
+          processingNote = '\\n\\n(If you just sent results, they may still be processing. Wait 30 seconds and try again.)';
+        }
+      }
+      
+      await getOrUpdateSession(phoneNumber, goipLine, 'status');
+      responseMessage = generateStatusMessage(hasSubmitted, refId, status) + processingNote;
+      await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
       return NextResponse.json({ status: 'success', type: 'status' });
     }
     
     if (parsed.type === 'result') {
       if (!parsed.isValid) {
+        await getOrUpdateSession(phoneNumber, goipLine, 'result_error');
         responseMessage = generateErrorMessage(parsed.errors);
-        await sendSMS(phoneNumber, responseMessage, requestId);
+        await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
         return NextResponse.json({ status: 'error', errors: parsed.errors });
+      }
+      
+      // Check for duplicate submission
+      console.log(`[${requestId}] Checking for duplicate submission...`);
+      const { data: existingResult, error: checkError } = await supabase
+        .from('election_results')
+        .select('reference_id, validation_status, submitted_at')
+        .eq('agent_id', agent.id)
+        .eq('polling_unit_code', agent.polling_unit_code)
+        .single();
+      
+      if (existingResult && !checkError) {
+        console.log(`[${requestId}] Duplicate detected! Existing ref: ${existingResult.reference_id}`);
+        await getOrUpdateSession(phoneNumber, goipLine, 'result_duplicate');
+        responseMessage = `You already submitted results (${existingResult.reference_id}) at ${new Date(existingResult.submitted_at).toLocaleTimeString()}. Status: ${existingResult.validation_status.toUpperCase()}.\n\nTo modify, contact your supervisor.`;
+        await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
+        return NextResponse.json({ 
+          status: 'duplicate', 
+          existing_ref: existingResult.reference_id,
+          message: 'Duplicate submission prevented'
+        });
       }
       
       // Save result IMMEDIATELY (no confirmation needed)
@@ -215,21 +268,24 @@ export async function POST(request: NextRequest) {
       
       if (insertError) {
         console.error(`[${requestId}] Error inserting election result:`, insertError);
+        await getOrUpdateSession(phoneNumber, goipLine, 'result_db_error');
         responseMessage = 'Error saving result. Please try again or contact support.';
-        await sendSMS(phoneNumber, responseMessage, requestId);
+        await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
         return NextResponse.json({ status: 'error', message: 'Database error', error: insertError.message });
       }
       
       console.log(`[${requestId}] Result saved successfully with ref: ${referenceId}`);
+      await getOrUpdateSession(phoneNumber, goipLine, 'result_success');
       responseMessage = generateResultSuccess(referenceId, parsed);
-      await sendSMS(phoneNumber, responseMessage, requestId);
+      await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
       return NextResponse.json({ status: 'success', reference_id: referenceId });
     }
     
     if (parsed.type === 'incident') {
       if (!parsed.isValid) {
+        await getOrUpdateSession(phoneNumber, goipLine, 'incident_error');
         responseMessage = generateErrorMessage(parsed.errors);
-        await sendSMS(phoneNumber, responseMessage, requestId);
+        await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
         return NextResponse.json({ status: 'error', errors: parsed.errors });
       }
       
@@ -252,14 +308,16 @@ export async function POST(request: NextRequest) {
         });
       
       if (insertError) {
+        await getOrUpdateSession(phoneNumber, goipLine, 'incident_db_error');
         responseMessage = 'Error saving incident. Please try again or contact support.';
       } else {
+        await getOrUpdateSession(phoneNumber, goipLine, 'incident_success');
         responseMessage = generateIncidentConfirmation(referenceId, parsed.severity);
         
         // TODO: Send notifications to coordinators based on severity
       }
       
-      await sendSMS(phoneNumber, responseMessage, requestId);
+      await sendSMS(phoneNumber, responseMessage, requestId, preferredLine);
       return NextResponse.json({ status: 'success', reference_id: referenceId });
     }
     
@@ -281,6 +339,70 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Get or update SMS session with line affinity
+ */
+async function getOrUpdateSession(
+  phoneNumber: string,
+  goipLine: string,
+  messageType?: string
+): Promise<string> {
+  try {
+    // Try to get existing session
+    const { data: existingSession } = await supabase
+      .from('sms_sessions')
+      .select('*')
+      .eq('phone_number', phoneNumber)
+      .single();
+    
+    const now = new Date().toISOString();
+    const messageCount = (existingSession?.session_data?.message_count || 0) + 1;
+    
+    const sessionData = {
+      last_goip_line: goipLine,
+      last_contacted_at: now,
+      message_count: messageCount,
+      last_message_type: messageType || 'unknown'
+    };
+    
+    // Upsert session
+    await supabase.from('sms_sessions').upsert({
+      phone_number: phoneNumber,
+      session_data: sessionData,
+      last_activity: now
+    }, {
+      onConflict: 'phone_number'
+    });
+    
+    return goipLine;
+  } catch (error) {
+    console.error('Error managing SMS session:', error);
+    // Return the provided line as fallback
+    return goipLine;
+  }
+}
+
+/**
+ * Get the preferred line for sending response (line affinity)
+ */
+async function getPreferredLine(phoneNumber: string, currentLine: string): Promise<string> {
+  try {
+    const { data: session } = await supabase
+      .from('sms_sessions')
+      .select('session_data')
+      .eq('phone_number', phoneNumber)
+      .single();
+    
+    // Use session's last line if available, otherwise use current line
+    const preferredLine = session?.session_data?.last_goip_line || currentLine;
+    console.log(`[Line Affinity] Phone: ${phoneNumber}, Preferred: ${preferredLine}, Current: ${currentLine}`);
+    return preferredLine;
+  } catch (error) {
+    console.error('Error getting preferred line:', error);
+    return currentLine;
   }
 }
 
@@ -320,16 +442,27 @@ async function logAudit(data: {
 }
 
 /**
- * Send SMS via DBL SMS Server
+ * Send SMS via DBL SMS Server with line affinity support
  */
-async function sendSMS(phoneNumber: string, message: string, requestId?: string): Promise<boolean> {
+async function sendSMS(
+  phoneNumber: string, 
+  message: string, 
+  requestId?: string, 
+  preferredLine?: string
+): Promise<boolean> {
   const logPrefix = requestId ? `[${requestId}]` : '';
   console.log(`${logPrefix} Sending SMS to ${phoneNumber} (keeping in local format)`);
+  if (preferredLine) {
+    console.log(`${logPrefix} Using preferred line: ${preferredLine}`);
+  }
   
   try {
     // Send SMS via DBL API using LOCAL format (08066137843)
     // DBL SMS server expects local Nigerian format, not international
-    const response = await sendSMSViaDbl(phoneNumber, message);
+    // Use preferred line if provided (for line affinity)
+    const response = await sendSMSViaDbl(phoneNumber, message, {
+      goip_line: preferredLine
+    });
     
     // Log outgoing SMS with DBL response (use local format for database)
     await supabase.from('sms_logs').insert({
@@ -342,6 +475,7 @@ async function sendSMS(phoneNumber: string, message: string, requestId?: string)
         dbl_task_id: response.taskID,
         dbl_reason: response.reason,
         sent_to_number: phoneNumber, // DBL received local format
+        goip_line: preferredLine,
         request_id: requestId
       }
     });
@@ -365,6 +499,7 @@ async function sendSMS(phoneNumber: string, message: string, requestId?: string)
       metadata: { 
         error: error instanceof Error ? error.message : 'Unknown error',
         sent_to_number: phoneNumber,
+        goip_line: preferredLine,
         request_id: requestId
       }
     });
