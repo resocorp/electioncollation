@@ -3,41 +3,48 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 export default function IncidentsPage() {
   const [incidents, setIncidents] = useState<any[]>([]);
+  const [allIncidents, setAllIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchIncidents(activeTab);
-  }, [activeTab]);
+    fetchIncidents();
+  }, []);
 
-  const fetchIncidents = async (status: string) => {
+  const fetchIncidents = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (status !== 'all') params.append('status', status);
-      params.append('limit', '100');
-      
-      const response = await fetch(`/api/incidents?${params}`);
+      // Fetch all incidents
+      const response = await fetch(`/api/incidents?limit=1000`);
       const data = await response.json();
-      setIncidents(data.incidents || []);
+      const allIncidentsData = data.incidents || [];
+      setAllIncidents(allIncidentsData);
+      setIncidents(allIncidentsData);
     } catch (error) {
       console.error('Error fetching incidents:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const getCounts = () => {
+    return {
+      all: allIncidents.length,
+      reported: allIncidents.filter(i => i.status === 'reported').length,
+      investigating: allIncidents.filter(i => i.status === 'investigating').length,
+      resolved: allIncidents.filter(i => i.status === 'resolved').length,
+    };
+  };
+
+  const counts = getCounts();
 
   const handleStatusUpdate = async (incidentId: string, newStatus: string) => {
     let notes = '';
@@ -61,7 +68,7 @@ export default function IncidentsPage() {
           title: 'Incident updated',
           description: 'The incident status has been updated.',
         });
-        fetchIncidents(activeTab);
+        fetchIncidents();
       } else {
         const data = await response.json();
         toast({
@@ -115,24 +122,31 @@ export default function IncidentsPage() {
         <div>
           <h1 className="text-3xl font-bold">Incident Reports</h1>
           <p className="text-gray-500 mt-1">Monitor and manage electoral incidents</p>
+          <div className="flex gap-6 mt-4 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">All Incidents:</span>
+              <Badge variant="secondary" className="text-base px-3 py-1">{counts.all}</Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Reported:</span>
+              <Badge variant="destructive" className="text-base px-3 py-1">{counts.reported}</Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Investigating:</span>
+              <Badge variant="warning" className="text-base px-3 py-1">{counts.investigating}</Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Resolved:</span>
+              <Badge variant="success" className="text-base px-3 py-1">{counts.resolved}</Badge>
+            </div>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All Incidents</TabsTrigger>
-            <TabsTrigger value="reported">
-              Reported <Badge variant="outline" className="ml-2">{incidents.filter(i => i.status === 'reported').length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="investigating">Investigating</TabsTrigger>
-            <TabsTrigger value="resolved">Resolved</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={activeTab}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Incidents ({incidents.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Incidents ({incidents.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
                 {loading ? (
                   <p className="text-center py-8 text-gray-500">Loading incidents...</p>
                 ) : incidents.length === 0 ? (
@@ -142,7 +156,6 @@ export default function IncidentsPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Ref ID</TableHead>
-                        <TableHead>Type</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Reporter</TableHead>
@@ -155,12 +168,17 @@ export default function IncidentsPage() {
                     <TableBody>
                       {incidents.map((incident) => (
                         <TableRow key={incident.id}>
-                          <TableCell className="font-mono text-xs">{incident.reference_id}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">{incident.incident_type.replace('_', ' ')}</Badge>
+                            <span className={`font-mono text-sm font-semibold ${
+                              incident.reference_id.includes('-') 
+                                ? 'text-blue-600 dark:text-blue-400' 
+                                : 'text-gray-500 text-xs'
+                            }`}>
+                              {incident.reference_id}
+                            </span>
                           </TableCell>
-                          <TableCell className="max-w-xs">
-                            <p className="text-sm truncate">{incident.description}</p>
+                          <TableCell className="max-w-md">
+                            <p className="text-base font-medium">{incident.description}</p>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
@@ -169,14 +187,14 @@ export default function IncidentsPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="text-sm">
-                              <p className="font-medium">{incident.agents?.name}</p>
-                              <p className="text-gray-500">{incident.agents?.phone_number}</p>
+                            <div>
+                              <p className="text-sm font-medium">{incident.agents?.name}</p>
+                              <p className="text-base font-semibold text-gray-700">{incident.agents?.phone_number}</p>
                             </div>
                           </TableCell>
                           <TableCell>{getSeverityBadge(incident.severity)}</TableCell>
                           <TableCell>{getStatusBadge(incident.status)}</TableCell>
-                          <TableCell className="text-xs text-gray-500">
+                          <TableCell className="text-sm font-medium text-gray-700">
                             {formatDate(incident.reported_at)}
                           </TableCell>
                           <TableCell>
@@ -203,10 +221,8 @@ export default function IncidentsPage() {
                     </TableBody>
                   </Table>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );

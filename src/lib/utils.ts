@@ -69,6 +69,67 @@ export function formatPhoneNumberForSending(phone: string): string {
   return cleaned;
 }
 
+/**
+ * Generate abbreviated code from text (e.g., "Awka North" -> "AWN")
+ */
+function generateAbbreviation(text: string, maxLength: number = 3): string {
+  // Remove special characters and extra spaces
+  const cleaned = text.toUpperCase().replace(/[^A-Z\s]/g, '').trim();
+  
+  // Split into words
+  const words = cleaned.split(/\s+/);
+  
+  if (words.length === 1) {
+    // Single word: take first N characters
+    return words[0].substring(0, maxLength);
+  } else if (words.length === 2) {
+    // Two words: take first 2 chars from first word + first char from second
+    return (words[0].substring(0, 2) + words[1].substring(0, 1)).substring(0, maxLength);
+  } else {
+    // Multiple words: take first char from each word
+    return words.map(w => w[0]).join('').substring(0, maxLength);
+  }
+}
+
+/**
+ * Generate human-readable reference ID
+ * Format: {PREFIX}-{LGA}-{WARD}-{SEQ}
+ * Example: INC-AWN-TW-001, EL-AWN-TW-042
+ */
+export async function generateReadableReferenceId(
+  prefix: string,
+  lga: string,
+  ward: string,
+  supabaseClient: any
+): Promise<string> {
+  const lgaAbbr = generateAbbreviation(lga, 3);
+  const wardAbbr = generateAbbreviation(ward, 2);
+  
+  // Determine table based on prefix
+  const table = prefix === 'INC' ? 'incident_reports' : 'election_results';
+  
+  // Get count of existing records with same LGA/Ward for this type
+  const { count, error } = await supabaseClient
+    .from(table)
+    .select('*', { count: 'exact', head: true })
+    .eq('lga', lga)
+    .eq('ward', ward);
+  
+  if (error) {
+    console.error('Error getting reference count:', error);
+    // Fallback to timestamp-based if query fails
+    return generateReferenceId(prefix);
+  }
+  
+  // Next sequence number (count + 1)
+  const seqNum = ((count || 0) + 1).toString().padStart(3, '0');
+  
+  return `${prefix}-${lgaAbbr}-${wardAbbr}-${seqNum}`;
+}
+
+/**
+ * Legacy timestamp-based reference ID generator (fallback)
+ */
 export function generateReferenceId(prefix: string): string {
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');

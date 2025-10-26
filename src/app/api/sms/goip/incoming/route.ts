@@ -9,7 +9,7 @@ import {
   generateIncidentConfirmation,
   generateStatusMessage
 } from '@/lib/sms-parser';
-import { generateReferenceId, formatPhoneNumber } from '@/lib/utils';
+import { generateReferenceId, generateReadableReferenceId, formatPhoneNumber } from '@/lib/utils';
 import { sendSMSViaDbl, validateDBLIncomingSMS } from '@/lib/dbl-sms';
 
 /**
@@ -250,7 +250,10 @@ export async function POST(request: NextRequest) {
       
       // Save result IMMEDIATELY (no confirmation needed)
       console.log(`[${requestId}] Saving result immediately - no confirmation required`);
-      const referenceId = generateReferenceId('EL');
+      
+      // Generate human-readable reference ID
+      const referenceId = await generateReadableReferenceId('EL', agent.lga, agent.ward, supabase);
+      console.log(`[${requestId}] Generated election ref: ${referenceId}`);
       
       const { error: insertError } = await supabase
         .from('election_results')
@@ -289,8 +292,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ status: 'error', errors: parsed.errors });
       }
       
-      // Save incident to database
-      const referenceId = generateReferenceId('INC');
+      // Generate human-readable reference ID
+      const referenceId = await generateReadableReferenceId('INC', agent.lga, agent.ward, supabase);
+      console.log(`[${requestId}] Generated incident ref: ${referenceId}`);
       
       const { error: insertError } = await supabase
         .from('incident_reports')
@@ -308,6 +312,7 @@ export async function POST(request: NextRequest) {
         });
       
       if (insertError) {
+        console.error(`[${requestId}] Error saving incident:`, insertError);
         await getOrUpdateSession(phoneNumber, goipLine, 'incident_db_error');
         responseMessage = 'Error saving incident. Please try again or contact support.';
       } else {
