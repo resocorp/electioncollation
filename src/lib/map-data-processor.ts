@@ -187,8 +187,31 @@ export function transformToGeoJSON(
 
   const featuresWithResults = features.filter(f => f.properties.result_received);
   console.log(`✅ Created ${features.length} features, ${featuresWithResults.length} with results`);
+  
+  // Log party distribution
+  const partyWins = featuresWithResults.reduce((acc, f) => {
+    const party = f.properties.winning_party || 'None';
+    acc[party] = (acc[party] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  console.log('🎨 Party wins distribution:', partyWins);
+  
   if (featuresWithResults.length > 0) {
     console.log('Sample feature with result:', featuresWithResults[0].properties);
+    // Log first 5 different party winners
+    const uniqueParties = new Set<string>();
+    featuresWithResults.forEach(f => {
+      if (uniqueParties.size < 5 && f.properties.winning_party) {
+        if (!uniqueParties.has(f.properties.winning_party)) {
+          console.log(`${f.properties.winning_party} winner:`, {
+            pu: f.properties.pu_code,
+            color: f.properties.winning_party_color,
+            votes: f.properties.total_votes
+          });
+          uniqueParties.add(f.properties.winning_party);
+        }
+      }
+    });
   }
 
   return {
