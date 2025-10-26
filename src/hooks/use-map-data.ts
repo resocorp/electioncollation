@@ -198,10 +198,11 @@ export function useMapData(): UseMapDataResult {
     }
   }, [loadPollingUnits, loadResults, loadParties]);
 
-  // Load data on mount
+  // Load data on mount (only once)
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   return {
     geoJSON,
