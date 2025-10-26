@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, FileCheck, Clock, AlertTriangle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Users, FileCheck, Clock, AlertTriangle, MessageSquare, Send, Inbox, TrendingUp } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 // Top 6 main parties for dashboard display
 const MAIN_PARTIES = ['ADC', 'APC', 'APGA', 'LP', 'PDP', 'YPP'];
@@ -194,6 +194,77 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* SMS Statistics Section */}
+        {stats?.smsStats && (
+          <>
+            <div className="mt-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">SMS Activity (Last 24 Hours)</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Messages</CardTitle>
+                  <MessageSquare className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {stats.smsStats.totalSMS}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {stats.smsStats.successRate}% success rate
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Inbound SMS</CardTitle>
+                  <Inbox className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {stats.smsStats.inboundSMS}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    From agents
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Outbound SMS</CardTitle>
+                  <Send className="h-4 w-4 text-green-500 dark:text-green-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {stats.smsStats.outboundSMS}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Responses sent
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Sessions</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {stats.smsStats.activeSessions}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Last hour
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

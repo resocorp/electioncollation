@@ -73,6 +73,30 @@ export async function GET(request: NextRequest) {
       });
     });
     
+    // Get SMS statistics
+    const { data: smsLogs } = await supabase
+      .from('sms_logs')
+      .select('direction, status, created_at')
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Last 24 hours
+    
+    const totalSMS = smsLogs?.length || 0;
+    const inboundSMS = smsLogs?.filter(log => log.direction === 'inbound').length || 0;
+    const outboundSMS = smsLogs?.filter(log => log.direction === 'outbound').length || 0;
+    const failedSMS = smsLogs?.filter(log => log.status === 'failed').length || 0;
+    const successRate = totalSMS > 0 ? Math.round(((totalSMS - failedSMS) / totalSMS) * 100) : 100;
+    
+    // Get active sessions (last hour)
+    const { count: activeSessions } = await supabase
+      .from('sms_sessions')
+      .select('*', { count: 'exact' })
+      .gte('last_activity', new Date(Date.now() - 60 * 60 * 1000).toISOString());
+    
+    // Get line usage stats from the view
+    const { data: lineUsageData } = await supabase
+      .from('line_usage_stats')
+      .select('*')
+      .limit(50);
+    
     return NextResponse.json({
       // PU Stats
       expectedTotalPUs: expectedTotalPUs || 0,
@@ -94,6 +118,17 @@ export async function GET(request: NextRequest) {
       // Vote Stats
       partyVotes,
       totalVotes,
+      
+      // SMS Stats (last 24 hours)
+      smsStats: {
+        totalSMS,
+        inboundSMS,
+        outboundSMS,
+        failedSMS,
+        successRate,
+        activeSessions: activeSessions || 0,
+        lineUsage: lineUsageData || []
+      },
       
       // Filters
       lga,
