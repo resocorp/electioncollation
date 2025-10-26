@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         party_votes,
         total_votes,
         submitted_at,
-        agents!inner(name, phone_number)
+        agents!election_results_agent_id_fkey(name, phone_number)
       `)
       .order('submitted_at', { ascending: false })
       .limit(limit);

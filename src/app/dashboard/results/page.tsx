@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowUpDown, Search, Phone, Mail, MapPin } from 'lucide-react';
+import { ArrowUpDown, Search, Phone, Mail, MapPin, RefreshCw } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 interface Agent {
@@ -52,6 +52,7 @@ export default function ResultsPage() {
   const [lgas, setLgas] = useState<string[]>([]);
   const [wards, setWards] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,8 +69,13 @@ export default function ResultsPage() {
   }, [lgaFilter]);
 
   useEffect(() => {
+    // Only fetch on initial load and auto-refresh
+    // Don't fetch when filters change - user must click Search button
     fetchPollingUnits();
-  }, [searchTerm, lgaFilter, wardFilter, sortBy, sortOrder]);
+    // Auto-refresh every 5 minutes for live updates
+    const interval = setInterval(fetchPollingUnits, 300000); // 5 minutes = 300000ms
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array - only run on mount
 
   const fetchLGAs = async () => {
     try {
@@ -100,12 +106,13 @@ export default function ResultsPage() {
       if (searchTerm) params.append('search', searchTerm);
       params.append('sortBy', sortBy);
       params.append('sortOrder', sortOrder);
-      params.append('limit', '1000');
+      params.append('limit', '10000'); // Request all polling units
       
       const response = await fetch(`/api/polling-units/results?${params}`);
       const data = await response.json();
       setPollingUnits(data.polling_units || []);
       setTotal(data.total || 0);
+      setLastRefresh(new Date());
     } catch (error) {
       console.error('Error fetching polling units:', error);
       toast({
@@ -120,11 +127,18 @@ export default function ResultsPage() {
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      setSortOrder(newOrder);
     } else {
       setSortBy(column);
       setSortOrder('asc');
     }
+    // Automatically search when sorting changes
+    setTimeout(() => fetchPollingUnits(), 50);
+  };
+
+  const handleSearch = () => {
+    fetchPollingUnits();
   };
 
   const clearFilters = () => {
@@ -133,6 +147,8 @@ export default function ResultsPage() {
     setWardFilter('');
     setSortBy('polling_unit_code');
     setSortOrder('asc');
+    // Fetch with cleared filters
+    setTimeout(() => fetchPollingUnits(), 100);
   };
 
   const getResultStatus = (pu: PollingUnit) => {
@@ -148,9 +164,16 @@ export default function ResultsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Election Results</h1>
-          <p className="text-gray-500 mt-1">View all polling units and their submitted results</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Election Results</h1>
+            <p className="text-gray-500 mt-1">View all polling units and their submitted results</p>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <span>Auto-refreshing every 5 mins</span>
+            <span className="text-xs">Last: {lastRefresh.toLocaleTimeString()}</span>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -197,13 +220,18 @@ export default function ResultsPage() {
             <CardTitle>Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search PU code or name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch();
+                    }
+                  }}
                   className="pl-9"
                 />
               </div>
@@ -229,6 +257,10 @@ export default function ResultsPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button onClick={handleSearch} className="bg-blue-600 hover:bg-blue-700">
+                <Search className="h-4 w-4 mr-2" />
+                Search
+              </Button>
               <Button variant="outline" onClick={clearFilters}>
                 Clear Filters
               </Button>
