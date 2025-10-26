@@ -64,9 +64,35 @@ export interface MapGeoJSON {
  * Calculate winning party and margin from results
  */
 function calculateWinningParty(partyVotes: Record<string, number>, parties: Party[]) {
-  const entries = Object.entries(partyVotes);
+  // Debug: Check what we're receiving
+  console.log('🔍 calculateWinningParty input:', {
+    partyVotes,
+    type: typeof partyVotes,
+    isObject: typeof partyVotes === 'object',
+    keys: Object.keys(partyVotes || {}),
+  });
+
+  // Handle case where partyVotes might be a string (JSON)
+  let votes = partyVotes;
+  if (typeof partyVotes === 'string') {
+    try {
+      votes = JSON.parse(partyVotes);
+      console.log('📝 Parsed party_votes from string:', votes);
+    } catch (e) {
+      console.error('❌ Failed to parse party_votes:', e);
+      return {
+        winning_party: null,
+        winning_party_color: null,
+        vote_margin: 0,
+        vote_margin_percentage: 0,
+      };
+    }
+  }
+
+  const entries = Object.entries(votes || {});
   
   if (entries.length === 0) {
+    console.log('⚠️ No party votes found');
     return {
       winning_party: null,
       winning_party_color: null,
@@ -81,12 +107,16 @@ function calculateWinningParty(partyVotes: Record<string, number>, parties: Part
   const [winner, winnerVotes] = entries[0];
   const [, runnerUpVotes] = entries[1] || [null, 0];
   
+  console.log('🏆 Winner determined:', { winner, winnerVotes, entries: entries.slice(0, 3) });
+  
   const totalVotes = entries.reduce((sum, [, votes]) => sum + votes, 0);
   const margin = winnerVotes - runnerUpVotes;
   const marginPercentage = totalVotes > 0 ? (margin / totalVotes) * 100 : 0;
   
   // Find party color
   const party = parties.find(p => p.acronym === winner);
+  
+  console.log('🎨 Party color lookup:', { winner, party: party?.acronym, color: party?.color });
   
   return {
     winning_party: winner,
@@ -114,7 +144,9 @@ export function transformToGeoJSON(
 
   console.log(`📊 Results map has ${resultsMap.size} entries`);
   if (results.length > 0) {
-    console.log('Sample result:', results[0]);
+    console.log('Sample result FULL:', JSON.stringify(results[0], null, 2));
+    console.log('Sample result party_votes type:', typeof results[0].party_votes);
+    console.log('Sample result party_votes value:', results[0].party_votes);
     console.log('Sample result polling_unit_code:', results[0].polling_unit_code);
   }
   if (pollingUnits.length > 0) {
