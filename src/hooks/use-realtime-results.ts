@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { ElectionResult } from '@/lib/map-data-processor';
 
@@ -15,8 +15,8 @@ interface UseRealtimeResultsProps {
 }
 
 export function useRealtimeResults({ onResultUpdate, enabled = true }: UseRealtimeResultsProps) {
-  const subscribeToResults = useCallback(() => {
-    if (!enabled) return null;
+  useEffect(() => {
+    if (!enabled) return;
 
     const supabase = createClient();
 
@@ -45,17 +45,10 @@ export function useRealtimeResults({ onResultUpdate, enabled = true }: UseRealti
         console.log('Real-time subscription status:', status);
       });
 
-    return channel;
-  }, [onResultUpdate, enabled]);
-
-  useEffect(() => {
-    const channel = subscribeToResults();
-
     return () => {
-      if (channel) {
-        console.log('🔴 Unsubscribing from real-time results');
-        channel.unsubscribe();
-      }
+      console.log('🔴 Unsubscribing from real-time results');
+      channel.unsubscribe();
     };
-  }, [subscribeToResults]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]); // Only re-subscribe if enabled changes
 }
