@@ -153,9 +153,9 @@ export default function ResultsPage() {
 
   const getResultStatus = (pu: PollingUnit) => {
     if (pu.result) {
-      return <Badge className="bg-green-600">Submitted</Badge>;
+      return <Badge className="bg-green-600 hover:bg-green-700 font-semibold shadow-sm">✓ Submitted</Badge>;
     }
-    return <Badge variant="outline" className="text-gray-500">Pending</Badge>;
+    return <Badge variant="outline" className="text-gray-500 font-semibold">⏳ Pending</Badge>;
   };
 
   const resultsSubmitted = pollingUnits.filter(pu => pu.result !== null).length;
@@ -176,50 +176,79 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Polling Units</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{total.toLocaleString()}</div>
+        {/* Summary Cards - Enhanced */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Polling Units</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">{total.toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-500">Results Submitted</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{resultsSubmitted.toLocaleString()}</div>
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-l-4 border-l-green-500">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Results Submitted</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{resultsSubmitted.toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-500">Pending Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{resultsPending.toLocaleString()}</div>
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-l-4 border-l-orange-500">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Results</p>
+                  <p className="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-2">{resultsPending.toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <svg className="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-500">Submission Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {total > 0 ? ((resultsSubmitted / total) * 100).toFixed(1) : 0}%
+          <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-l-4 border-l-purple-500">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Submission Rate</p>
+                  <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">
+                    {total > 0 ? ((resultsSubmitted / total) * 100).toFixed(1) : 0}%
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
+        {/* Filters - Enhanced */}
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
+            <CardTitle className="flex items-center gap-2">
+              <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+              Filters
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -257,23 +286,26 @@ export default function ResultsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleSearch} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={handleSearch} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300">
                 <Search className="h-4 w-4 mr-2" />
                 Search
               </Button>
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={clearFilters} className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 Clear Filters
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Results Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Polling Units ({pollingUnits.length})</CardTitle>
+        {/* Results Table - Enhanced */}
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
+            <CardTitle className="flex items-center gap-2">
+              <div className="h-8 w-1 bg-gradient-to-b from-green-500 to-teal-500 rounded-full"></div>
+              Polling Units ({pollingUnits.length})
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {loading ? (
               <p className="text-center py-8 text-gray-500">Loading polling units...</p>
             ) : pollingUnits.length === 0 ? (
@@ -316,7 +348,7 @@ export default function ResultsPage() {
                   </TableHeader>
                   <TableBody>
                     {pollingUnits.map((pu) => (
-                      <TableRow key={pu.id}>
+                      <TableRow key={pu.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                         <TableCell className="font-mono text-sm font-medium">{pu.polling_unit_code}</TableCell>
                         <TableCell>
                           <div>
