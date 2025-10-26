@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, FileText, AlertTriangle, MessageSquare, Antenna, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, AlertTriangle, MessageSquare, Antenna, Map, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -37,6 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Electoral Map', href: '/dashboard/electoral-map', icon: Map },
     { name: 'Agents', href: '/dashboard/agents', icon: Users },
     { name: 'Results', href: '/dashboard/results', icon: FileText },
     { name: 'Incidents', href: '/dashboard/incidents', icon: AlertTriangle },

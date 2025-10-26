@@ -1,0 +1,33 @@
+/* Mapbox GL styles */
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
+/* Custom map container styles */
+.mapboxgl-map {
+  font-family: inherit;
+}
+
+/* Ensure map controls are visible in dark mode */
+.mapboxgl-ctrl-group button {
+  background-color: white;
+}
+
+.dark .mapboxgl-ctrl-group button {
+  background-color: #374151;
+  color: white;
+}
+
+/* Popup styles */
+.mapboxgl-popup-content {
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.dark .mapboxgl-popup-content {
+  background-color: #1f2937;
+  color: white;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 20px;
+  padding: 4px 8px;
+}
