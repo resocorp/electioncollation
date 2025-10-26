@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -58,7 +59,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-bold text-center">Election Collation</CardTitle>
@@ -93,10 +97,10 @@ export default function LoginPage() {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-          <div className="mt-6 p-4 bg-blue-50 rounded-md text-sm">
-            <p className="font-semibold mb-2">Default Admin Credentials:</p>
-            <p className="text-gray-600">Phone: 2348000000000</p>
-            <p className="text-gray-600">Password: Admin123!</p>
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md text-sm border border-blue-100 dark:border-blue-800">
+            <p className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Default Admin Credentials:</p>
+            <p className="text-gray-600 dark:text-gray-400">Phone: 2348000000000</p>
+            <p className="text-gray-600 dark:text-gray-400">Password: Admin123!</p>
           </div>
         </CardContent>
       </Card>
