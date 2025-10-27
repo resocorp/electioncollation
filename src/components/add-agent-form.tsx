@@ -221,6 +221,24 @@ export function AddAgentForm({ onSuccess, onCancel }: AddAgentFormProps) {
         />
       </div>
 
+      {/* Role */}
+      <div>
+        <Label htmlFor="role">Role *</Label>
+        <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })} required>
+          <SelectTrigger id="role">
+            <SelectValue placeholder="Select role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pu_agent">Polling Unit Agent</SelectItem>
+            <SelectItem value="ward_agent">Ward Agent</SelectItem>
+            <SelectItem value="lga_agent">LGA Agent</SelectItem>
+            <SelectItem value="state_agent">State Agent</SelectItem>
+            <SelectItem value="ccc_supervisor">CCC Supervisor</SelectItem>
+            <SelectItem value="admin">Administrator</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* State */}
       <div>
         <Label htmlFor="state">State *</Label>
